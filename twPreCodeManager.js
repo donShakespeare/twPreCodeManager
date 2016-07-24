@@ -10,8 +10,8 @@ An ingenious way to use TinyMCE to do the infamous thing called, HTML entitizing
       twPreCodeManager: "[[++assets_url]]components/tinymcewrapper/tinymceplugins/twPreCodeManager.js"
     },
     twPreCodeManagerSettings: {
-      protectSquareBracket: true, // default is false
-      protectSquareBracketXter: "*", // default xter to place in between open square brackets [[ = [*[
+      protectMODXsquareBrackets: true, // default is false
+      protectMODXsquareBracketsXter: "*", // default xter to place in between open square brackets [[ = [*[
       contentEditable: true, //default is false
       managerPREcss: false, //default is true
       managerForceCODEtag: false, //default is true
