@@ -10,6 +10,8 @@ tinymce.init({
     twExoticMarkdownEditor: "[[++assets_url]]components/tinymcewrapper/tinymceplugins/twExoticMarkdownEditor.js", //optional
   },
   twPreCodeManagerSettings: {
+    protectSquareBracket: true, // default is false
+    protectSquareBracketXter: "*", // default xter to place in between open square brackets [[ = [*[
     contentEditable: true, //default is false
     managerPREcss: false, //default is true
     managerForceCODEtag: false, //default is true
