@@ -1,4 +1,4 @@
-/*replacement to TinyMCE codesample plugin, for MODX Revolution and anybody (supports Markdown)
+/*replacement to TinyMCE codesample plugin (supports Markdown); dedicated to MODX Revolution community and anybody else out there.
 by donshakespeare
 https://github.com/donShakespeare/twPreCodeManager
 
@@ -10,6 +10,8 @@ An ingenious way to use TinyMCE to do the infamous thing called, HTML entitizing
       twPreCodeManager: "[[++assets_url]]components/tinymcewrapper/tinymceplugins/twPreCodeManager.js"
     },
     twPreCodeManagerSettings: {
+      protectSquareBracket: true, // default is false
+      protectSquareBracketXter: "*", // default xter to place in between open square brackets [[ = [*[
       contentEditable: true, //default is false
       managerPREcss: false, //default is true
       managerForceCODEtag: false, //default is true
@@ -91,12 +93,15 @@ function twPreCodeManagerInputBox(editor, twPreCodeManagerWidth, twPreCodeManage
    var editor = tinymce.activeEditor;
    editor.undoManager.transact(function() {
     var node = getSelectedCodeSample(editor);
-    code = editor.dom.encode(code); //from  submitted form
+    if(tinymce.activeEditor.getParam("twPreCodeManagerSettings",{}).protectSquareBracket){
+      var guage = editor.getParam("twPreCodeManagerSettings",{}).protectSquareBracketXter || "*";
+      code = editor.dom.encode(code.replace(/(?:\[\[)/g, "["+guage+"[")); //from  submitted form
+    }
+    else{
+      code = editor.dom.encode(code); //from  submitted form
+    }
     if (node && node.nodeName=='PRE' &&  !editor.getParam('twExoticMarkdownEditor', false)) {
       node.setAttribute("class", $('.mce-preLanguageTextBox').val());
-      // if(tinymce.activeEditor.getParam("twPreCodeManagerSettings",{}).managerForceCODEtag && !node.firstChild){
-      //   node.innerHTML ="<code></code>";
-      // }
       if(node.firstChild){
         node.firstChild.setAttribute("class", $('.mce-codeLanguageTextBox').val());
         node.firstChild.innerHTML = code;
@@ -106,13 +111,23 @@ function twPreCodeManagerInputBox(editor, twPreCodeManagerWidth, twPreCodeManage
        }
       editor.selection.select(node);
     }
+    else if (node && node.nodeName =='CODE' && node.parentNode.nodeName !=='PRE' &&  !editor.getParam('twExoticMarkdownEditor', false)) {
+      node.setAttribute("class", $('.mce-codeLanguageTextBox').val());
+      node.innerHTML = code;
+      editor.selection.select(node);
+    }
     else {
       if(editor.getParam('twExoticMarkdownEditor', false)){
         editor.insertContent('<br>```'+language+'<br>' + code.replace(/ /g, "&nbsp;").replace(/(?:\r\n|\r|\n)/g, "<br />") + '<br>```<br><br>');
       }
       else{
-         editor.insertContent('<pre id="__new" class='+language+'><code class='+language+'>' + code + '</code></pre>');
-         editor.selection.select(tinymce.activeEditor.$('#__new').removeAttr('id')[0]);
+        // if(twPreCodeManagerCODEonly == 1){
+        //   editor.insertContent('<code class='+language+'>' + code + '</code>');
+        // }
+        // else{
+          editor.insertContent('<pre id="__new" class='+language+'><code class='+language+'>' + code + '</code></pre>');
+          editor.selection.select(tinymce.activeEditor.$('#__new').removeAttr('id')[0]);
+        // }
       }
     }
    });
@@ -120,7 +135,7 @@ function twPreCodeManagerInputBox(editor, twPreCodeManagerWidth, twPreCodeManage
 
   function getSelectedCodeSample(editor) {
    var node = tinymce.activeEditor.selection.getNode();
-   if (node && node.nodeName == 'PRE') {
+   if (node && node.nodeName =='CODE' && node.parentNode.nodeName !=='PRE' || node.nodeName == 'PRE') {
     return node;
    }
    return null;
@@ -128,12 +143,11 @@ function twPreCodeManagerInputBox(editor, twPreCodeManagerWidth, twPreCodeManage
 
  function getCurrentCode(editor) {
   var node = getSelectedCodeSample(editor);
-
   if (node) {
-    if (node.firstChild) {
+    if (node.nodeName == 'PRE' && node.firstChild) {
      return node.firstChild.innerText;
     }
-    else{
+    else if (node.nodeName =='CODE' && node.parentNode.nodeName !=='PRE') {
      return node.innerText;
     }
   }
@@ -144,7 +158,7 @@ function twPreCodeManagerInputBox(editor, twPreCodeManagerWidth, twPreCodeManage
 
  function getPreCurrentLanguage(editor) {
   var matches, node = getSelectedCodeSample(editor);
-  if (node) {
+  if (node && node.nodeName =='PRE') {
    matches = node.className;
    return matches ? matches : '';
   }
@@ -153,7 +167,11 @@ function twPreCodeManagerInputBox(editor, twPreCodeManagerWidth, twPreCodeManage
 
  function getCodeCurrentLanguage(editor) {
   var matches, node = getSelectedCodeSample(editor);
-  if (node && node.firstChild) {
+  if (node && node.nodeName =='CODE' && node.parentNode.nodeName !=='PRE') {
+   matches = node.className;
+   return matches ? matches : '';
+  }
+  else if (node && node.firstChild) {
    matches = node.firstChild.className;
    return matches ? matches : '';
   }
@@ -175,19 +193,14 @@ function twPreCodeManagerInputBox(editor, twPreCodeManagerWidth, twPreCodeManage
       label: 'PRE classes',
       maxWidth: 200,
       value: getPreCurrentLanguage(editor),
-      // onchange: function(){
-      //   var node = tinymce.activeEditor.selection.getNode();
-      //   if(node){
-      //     var currentClass = "";
-      //     if(this.value() !== ""){
-      //       var currentClass = this.value() + " ";
-      //     }
-      //     $(node).attr("class", this.value());
-      //     $(node).find("code").attr("class", this.value()); //allow optional
-      //   }
-      // },
-      // values: languages
-      classes: 'preLanguageTextBox'
+      classes: 'preLanguageTextBox',
+      onPostRender:function(){
+         var node = tinymce.activeEditor.selection.getNode();
+         if (node && node.nodeName == "CODE" && node.parentNode.nodeName !=='PRE') {
+          $('.mce-preLanguageTextBox').parent().parent().hide();
+          // $('.mce-preLanguageTextBox').attr("disabled", 1);
+         }
+      }
      },
      {
       type: 'textbox',
@@ -211,28 +224,16 @@ function twPreCodeManagerInputBox(editor, twPreCodeManagerWidth, twPreCodeManage
       tooltip: 'Some Language preselects',
       label: 'Presets',
       maxWidth: 200,
-      value: getPreCurrentLanguage(editor),
+      value: getPreCurrentLanguage(editor) || getCodeCurrentLanguage(editor),
       values: languages,
       classes: 'languageListBox',
       onselect: function(){
-        var currentPreLan = "";
-        if($(".mce-preLanguageTextBox").val().trim() !== ""){
-          var currentPreLan = $(".mce-preLanguageTextBox").val() + " ";
+        var currentPreLan = $('.mce-preLanguageTextBox')[0].value ? $('.mce-preLanguageTextBox')[0].value+" " : "";
+        if($(".mce-preLanguageTextBox").length){
+          $('.mce-preLanguageTextBox')[0].value = currentPreLan+this.value();
         }
-        var currentCodeLan = "";
-        if($(".mce-codeLanguageTextBox").val().trim() !== ""){
-          var currentCodeLan = $(".mce-codeLanguageTextBox").val() + " ";
-        }
-        $('.mce-preLanguageTextBox')[0].value = currentPreLan+this.value();
+        var currentCodeLan = $('.mce-codeLanguageTextBox')[0].value ? $('.mce-codeLanguageTextBox')[0].value+" " : "";
         $('.mce-codeLanguageTextBox')[0].value = currentCodeLan+this.value();
-        // if ("createEvent" in document) {
-        //   var evt = document.createEvent("HTMLEvents");
-        //   evt.initEvent("change", false, true);
-        //   $('.mce-preLanguageTextBox')[0].dispatchEvent(evt);
-        // }
-        // else {
-        //   $('.mce-preLanguageTextBox')[0].fireEvent("onchange");
-        // }
       }
      },
 
@@ -270,9 +271,7 @@ tinymce.PluginManager.add('twPreCodeManager', function(editor) {
    else{
      $(editor.getBody()).find("pre").attr('contenteditable', false);
    }
-   if(editor.getParam("twPreCodeManagerSettings",{}).managerPREcss == false){
-   }
-   else{
+   if(editor.getParam("twPreCodeManagerSettings",{}).managerPREcss !== false){
      $(editor.getBody()).find("pre").attr("twprecodemanagerprecss",1);
    }
   });
@@ -291,9 +290,23 @@ tinymce.PluginManager.add('twPreCodeManager', function(editor) {
    cmd: 'twPreCodeManager',
    text: 'Insert/edit <pre><code>'
   });
-  editor.on('DblClick', function(e) {
-    if (e.target.nodeName == 'PRE' || e.target.nodeName == 'CODE'){
+  editor.on('click', function(e) {
+    if (e.target.nodeName == 'CODE' && e.target.parentNode.nodeName !== 'PRE'){
       editor.execCommand('twPreCodeManager', true);
+    }
+  });
+  editor.on('DblClick', function(e) {
+    if (e.target.nodeName == 'PRE'){
+      editor.execCommand('twPreCodeManager', true);
+    }
+  });
+  editor.on('LoadContent', function(e) {
+    if(editor.getParam("twPreCodeManagerSettings",{}).protectSquareBracket){
+      $(editor.getBody()).find("code").each(function(){
+        var content = $(this).html();
+        var guage = editor.getParam("twPreCodeManagerSettings",{}).protectSquareBracketXter || "*";
+        $(this).html(content.replace(/(?:\[\[)/g, "["+guage+"["));
+      });
     }
   });
  });
