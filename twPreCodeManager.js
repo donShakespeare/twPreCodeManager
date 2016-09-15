@@ -22,71 +22,87 @@ An ingenious way to use TinyMCE to do the infamous thing called, HTML entitizing
     contextmenu: "twPreCodeManager"
   });
 */
-var twPreCodeManagerPREcss = "[twprecodemanagerprecss]{position:relative!important;max-height:100px!important;box-shadow:1px 2px 3px 3px grey;overflow:hidden!important;padding:10px!important}[twprecodemanagerprecss]:before{content:'';display:block!important;height:10px!important;position:absolute!important;bottom:-11px;width:90%;margin:auto;background:#fff;box-shadow:4px 12px 20px 20px #FBFBFB;left:0;right:0}[twprecodemanagerprecss][data-mce-selected]{outline:0!important;box-shadow:1px 2px 3px 3px #3B3A7D!important}";
-
-if(!$("#twPreCodeManagerPREcss").length){
-  $('head').append('<style id="twPreCodeManagerPREcss">'+twPreCodeManagerPREcss+'</style>')
+//for both inline and iframe
+function twPreCodeManagerPREcssInit(editor){
+  var twPreCodeManagerPREcss = "[twprecodemanagerprecss]{position:relative!important;max-height:100px!important;box-shadow:1px 2px 3px 3px grey;overflow:hidden!important;padding:10px!important}[twprecodemanagerprecss]:before{content:'';display:block!important;height:10px!important;position:absolute!important;bottom:-11px;width:90%;margin:auto;background:#fff;box-shadow:4px 12px 20px 20px #FBFBFB;left:0;right:0}[twprecodemanagerprecss][data-mce-selected]{outline:0!important;box-shadow:1px 2px 3px 3px #3B3A7D!important}";
+  if(editor.getParam("inline")){
+    if(!$("#twPreCodeManagerPREcss").length){
+      $('head').append('<style id="twPreCodeManagerPREcss">'+twPreCodeManagerPREcss+'</style>')
+    }
+  }
+  else{
+    var thisBody = $("#"+editor.id+"_ifr").contents().find("head");
+    if(! thisBody.find("#twPreCodeManagerPREcss").length){
+      thisBody.append('<style id="twPreCodeManagerPREcss">'+twPreCodeManagerPREcss+'</style>');
+    }
+  }
 }
 
 function twPreCodeManagerInputBox(editor, twPreCodeManagerWidth, twPreCodeManagerHeight) {
+  var library = [
+    {text: 'Library Presets', value: ''},
+    {text:'Highlight', value: 'highlight'}, 
+    {text:'Prism', value: 'language-'}, 
+    {text:'Prettyprint', value: 'prettyprint'}
+  ];
   var languages = [
-    {text: 'Prism.js Examples', value: ''},
-    {text:'CSS', value: 'language-css'}, 
-    {text:'HTML', value: 'language-markup'}, 
-    {text:'JavaScript', value: 'language-javascript'}, 
-    {text:'JSON', value: 'language-json'}, 
-    {text:'PHP', value: 'language-php'}, 
+    {text: 'Language Names', value: ''},
+    {text:'CSS', value: 'css'}, 
+    {text:'HTML', value: 'markup'},
+    {text:'JavaScript', value: 'javascript'}, 
+    {text:'JSON', value: 'json'}, 
+    {text:'PHP', value: 'php'}, 
     {text:'--------------', value: '', disabled: true}, 
-    {text:'ABAP', value: 'language-abap'}, 
-    {text:'ActionScript', value: 'language-actionscript'}, 
-    {text:'Apache Configuration', value: 'language-apacheconf'}, 
-    {text:'APL', value: 'language-apl'}, 
-    {text:'AppleScript', value: 'language-applescript'}, 
-    {text:'AsciiDoc', value: 'language-asciidoc'}, 
-    {text:'ASP.NET (C#)', value: 'language-aspnet'}, 
-    {text:'AutoHotkey', value: 'language-autohotkey'}, 
-    {text:'AutoIt', value: 'language-autoit'}, 
-    {text:'BASIC', value: 'language-basic'}, 
-    {text:'C-like', value: 'language-clike'}, 
-    {text:'CoffeeScript', value: 'language-coffeescript'}, 
-    {text:'C++', value: 'language-cpp'}, 
-    {text:'C#', value: 'language-csharp'}, 
-    {text:'CSS', value: 'language-css'}, 
-    {text:'CSS Extras', value: 'language-css-extras'}, 
-    {text:'F#', value: 'language-fsharp'}, 
-    {text:'GLSL', value: 'language-glsl'}, 
-    {text:'HTML', value: 'language-markup'}, 
-    {text:'HTTP', value: 'language-http'}, 
-    {text:'Inform 7', value: 'language-inform7'}, 
-    {text:'JavaScript', value: 'language-javascript'}, 
-    {text:'JSON', value: 'language-json'}, 
-    {text:'React JSX', value: 'language-jsx'}, 
-    {text:'LaTeX', value: 'language-latex'}, 
-    {text:'LOLCODE', value: 'language-lolcode'}, 
-    {text:'MathML', value: 'language-mathml'}, 
-    {text:'MATLAB', value: 'language-matlab'}, 
-    {text:'MEL', value: 'language-mel'}, 
-    {text:'NASM', value: 'language-nasm'}, 
-    {text:'nginx', value: 'language-nginx'}, 
-    {text:'NSIS', value: 'language-nsis'}, 
-    {text:'Objective-C', value: 'language-objectivec'}, 
-    {text:'OCaml', value: 'language-ocaml'}, 
-    {text:'PARI/GP', value: 'language-parigp'}, 
-    {text:'PHP', value: 'language-php'}, 
-    {text:'PHP Extras', value: 'language-php-extras'}, 
-    {text:'PowerShell', value: 'language-powershell'}, 
-    {text:'reST (reStructuredText)', value: 'language-rest'}, 
-    {text:'SAS', value: 'language-sas'}, 
-    {text:'Sass (Sass)', value: 'language-sass'}, 
-    {text:'Sass (Scss)', value: 'language-scss'}, 
-    {text:'SQL', value: 'language-sql'}, 
-    {text:'SVG', value: 'language-svg'}, 
-    {text:'TypeScript', value: 'language-typescript'}, 
-    {text:'VHDL', value: 'language-vhdl'}, 
-    {text:'vim', value: 'language-vim'}, 
-    {text:'Wiki markup', value: 'language-wiki'}, 
-    {text:'XML', value: 'language-xml'}, 
-    {text:'YAML', value: 'language-yaml'}
+    {text:'ABAP', value: 'abap'}, 
+    {text:'ActionScript', value: 'actionscript'}, 
+    {text:'Apache Configuration', value: 'apacheconf'}, 
+    {text:'APL', value: 'apl'}, 
+    {text:'AppleScript', value: 'applescript'}, 
+    {text:'AsciiDoc', value: 'asciidoc'}, 
+    {text:'ASP.NET (C#)', value: 'aspnet'}, 
+    {text:'AutoHotkey', value: 'autohotkey'}, 
+    {text:'AutoIt', value: 'autoit'}, 
+    {text:'BASIC', value: 'basic'}, 
+    {text:'C-like', value: 'clike'}, 
+    {text:'CoffeeScript', value: 'coffeescript'}, 
+    {text:'C++', value: 'cpp'}, 
+    {text:'C#', value: 'csharp'}, 
+    {text:'CSS', value: 'css'}, 
+    {text:'CSS Extras', value: 'css-extras'}, 
+    {text:'F#', value: 'fsharp'}, 
+    {text:'GLSL', value: 'glsl'}, 
+    {text:'HTML', value: 'markup'}, 
+    {text:'HTTP', value: 'http'}, 
+    {text:'Inform 7', value: 'inform7'}, 
+    {text:'JavaScript', value: 'javascript'}, 
+    {text:'JSON', value: 'json'}, 
+    {text:'React JSX', value: 'jsx'}, 
+    {text:'LaTeX', value: 'latex'}, 
+    {text:'LOLCODE', value: 'lolcode'}, 
+    {text:'MathML', value: 'mathml'}, 
+    {text:'MATLAB', value: 'matlab'}, 
+    {text:'MEL', value: 'mel'}, 
+    {text:'NASM', value: 'nasm'}, 
+    {text:'nginx', value: 'nginx'}, 
+    {text:'NSIS', value: 'nsis'}, 
+    {text:'Objective-C', value: 'objectivec'}, 
+    {text:'OCaml', value: 'ocaml'}, 
+    {text:'PARI/GP', value: 'parigp'}, 
+    {text:'PHP', value: 'php'}, 
+    {text:'PHP Extras', value: 'php-extras'}, 
+    {text:'PowerShell', value: 'powershell'}, 
+    {text:'reST (reStructuredText)', value: 'rest'}, 
+    {text:'SAS', value: 'sas'}, 
+    {text:'Sass (Sass)', value: 'sass'}, 
+    {text:'Sass (Scss)', value: 'scss'}, 
+    {text:'SQL', value: 'sql'}, 
+    {text:'SVG', value: 'svg'}, 
+    {text:'TypeScript', value: 'typescript'}, 
+    {text:'VHDL', value: 'vhdl'}, 
+    {text:'vim', value: 'vim'}, 
+    {text:'Wiki markup', value: 'wiki'}, 
+    {text:'XML', value: 'xml'}, 
+    {text:'YAML', value: 'yaml'}
   ];
 
   function insertCodeSample(editor, language, code) {
@@ -102,9 +118,9 @@ function twPreCodeManagerInputBox(editor, twPreCodeManagerWidth, twPreCodeManage
     }
     if (node && node.nodeName=='PRE' &&  !editor.getParam('twExoticMarkdownEditor', false)) {
       node.setAttribute("class", $('.mce-preLanguageTextBox').val());
-      if(node.firstChild){
-        node.firstChild.setAttribute("class", $('.mce-codeLanguageTextBox').val());
-        node.firstChild.innerHTML = code;
+      if(node.children[0]){
+        node.children[0].setAttribute("class", $('.mce-codeLanguageTextBox').val());
+        node.children[0].innerHTML = code;
       }
       else{
         node.innerHTML = code;
@@ -144,8 +160,11 @@ function twPreCodeManagerInputBox(editor, twPreCodeManagerWidth, twPreCodeManage
  function getCurrentCode(editor) {
   var node = getSelectedCodeSample(editor);
   if (node) {
-    if (node.nodeName == 'PRE' && node.firstChild) {
+    if (node.nodeName == 'PRE' && node.children[0]) {
      return node.firstChild.innerText;
+    }
+    else if (node.nodeName == 'PRE' && !node.children[0]) {
+     return node.innerText;
     }
     else if (node.nodeName =='CODE' && node.parentNode.nodeName !=='PRE') {
      return node.innerText;
@@ -211,18 +230,35 @@ function twPreCodeManagerInputBox(editor, twPreCodeManagerWidth, twPreCodeManage
       classes: 'codeLanguageTextBox',
       onPostRender:function(){
          var node = tinymce.activeEditor.selection.getNode();
-         if (node && node.nodeName == "PRE" && !node.firstChild && tinymce.activeEditor.getParam("twPreCodeManagerSettings",{}).managerForceCODEtag) {
+         if (node && node.nodeName == "PRE" && !node.children[0] && tinymce.activeEditor.getParam("twPreCodeManagerSettings",{}).managerForceCODEtag) {
           node.innerHTML ="<code></code>";
          }
-         if (node && node.nodeName == "PRE" && !node.firstChild || tinymce.activeEditor.getParam('twExoticMarkdownEditor', false)) {
+         if (node && node.nodeName == "PRE" && !node.children[0] || tinymce.activeEditor.getParam('twExoticMarkdownEditor', false)) {
           $(".mce-codeLanguageTextBox").parent().parent().hide();
          }
       }
      },
      {
       type: 'listbox',
+      tooltip: 'Library Presets',
+      label: 'Libraries',
+      maxWidth: 200,
+      value: getPreCurrentLanguage(editor) || getCodeCurrentLanguage(editor),
+      values: library,
+      classes: 'libListBox',
+      onselect: function(){
+        var currentPreLan = $('.mce-preLanguageTextBox')[0].value ? $('.mce-preLanguageTextBox')[0].value+" " : "";
+        if($(".mce-preLanguageTextBox").length){
+          $('.mce-preLanguageTextBox')[0].value = currentPreLan+this.value();
+        }
+        var currentCodeLan = $('.mce-codeLanguageTextBox')[0].value ? $('.mce-codeLanguageTextBox')[0].value+" " : "";
+        $('.mce-codeLanguageTextBox')[0].value = currentCodeLan+this.value();
+      }
+     },
+     {
+      type: 'listbox',
       tooltip: 'Some Language preselects',
-      label: 'Presets',
+      label: 'Languages',
       maxWidth: 200,
       value: getPreCurrentLanguage(editor) || getCodeCurrentLanguage(editor),
       values: languages,
@@ -265,6 +301,9 @@ function twPreCodeManagerInputBox(editor, twPreCodeManagerWidth, twPreCodeManage
 }
 
 tinymce.PluginManager.add('twPreCodeManager', function(editor) {
+  editor.on('init', function() {
+    twPreCodeManagerPREcssInit(editor);
+  });
   editor.on('SetContent', function() {
    if(editor.getParam("twPreCodeManagerSettings",{}).contentEditable == true){
    }
@@ -290,13 +329,8 @@ tinymce.PluginManager.add('twPreCodeManager', function(editor) {
    cmd: 'twPreCodeManager',
    text: 'Insert/edit <pre><code>'
   });
-  editor.on('click', function(e) {
-    if (e.target.nodeName == 'CODE' && e.target.parentNode.nodeName !== 'PRE'){
-      editor.execCommand('twPreCodeManager', true);
-    }
-  });
   editor.on('DblClick', function(e) {
-    if (e.target.nodeName == 'PRE'){
+    if (e.target.nodeName == 'PRE' || e.target.nodeName == 'CODE' && e.target.parentNode.nodeName == 'PRE' || e.target.nodeName == 'CODE' && e.target.parentNode.nodeName !== 'PRE'){
       editor.execCommand('twPreCodeManager', true);
     }
   });
